@@ -1,9 +1,10 @@
 import openai
 import os
-import base64
-import io
 import json
 import logging
+import pytesseract
+import cv2
+import numpy as np
 from dotenv import load_dotenv
 
 # Load environment variables and set API key
@@ -11,45 +12,82 @@ load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 openai.api_key = OPENAI_API_KEY
 
+def extract_ui_elements(screenshot):
+    """
+    Uses pytesseract to extract UI elements (text and positions) from the screenshot.
+    Returns a list of dictionaries with keys: 'text', 'left', 'top', 'width', 'height'.
+    """
+    # Convert Pillow image to a numpy array
+    image_np = np.array(screenshot)
+    # Convert to grayscale for better OCR results
+    gray = cv2.cvtColor(image_np, cv2.COLOR_BGR2GRAY)
+    # Run pytesseract to get OCR data with bounding boxes
+    data = pytesseract.image_to_data(gray, output_type=pytesseract.Output.DICT)
+    
+    elements = []
+    n_boxes = len(data['level'])
+    for i in range(n_boxes):
+        text = data['text'][i].strip()
+        if text:  # Only include non-empty texts
+            left = data['left'][i]
+            top = data['top'][i]
+            width = data['width'][i]
+            height = data['height'][i]
+            elements.append({
+                "text": text,
+                "left": left,
+                "top": top,
+                "width": width,
+                "height": height
+            })
+    return elements
+
 def analyze_command(command_text, screenshot):
     """
-    Sends the command text and screenshot to the OpenAI API.
+    Processes the command by extracting UI elements via OCR from the screenshot,
+    then sending this information along with the command to OpenAI for processing.
     
     Args:
-        command_text (str): The transcribed command from the user.
+        command_text (str): The user's spoken command.
         screenshot (PIL.Image): A Pillow Image object of the current browser view.
         
     Returns:
-        dict: A dictionary containing the action details (or an 'error' key with a short message).
-              Example success response:
+        dict: A structured response from the API with keys such as 'action', 'target', 'value', and 'position'.
+              Example success:
               {
                   "action": "click",
                   "target": "login button",
-                  "value": ""
+                  "value": "",
+                  "position": {"x": 500, "y": 400}
               }
-              Example error response:
+              Example error:
               {
                   "error": "No matching UI element found."
               }
     """
     try:
-        # Convert screenshot to base64 string
-        buffer = io.BytesIO()
-        screenshot.save(buffer, format="PNG")
-        img_str = base64.b64encode(buffer.getvalue()).decode("utf-8")
+        # Extract UI elements from the screenshot
+        ui_elements = extract_ui_elements(screenshot)
         
-        # Build a prompt for the OpenAI API
-        prompt = (
-            "You are a browser automation assistant. Given the following browser screenshot (base64 encoded, truncated for brevity) "
-            "and a user's command, determine the necessary action to perform on the browser. Return a JSON object with the following keys:\n"
-            "  - 'action': one of 'click', 'open', 'type', 'scroll', etc.\n"
-            "  - 'target': the target element, URL, or field (if applicable).\n"
-            "  - 'value': any additional text required (if applicable).\n\n"
-            "If the command cannot be executed, return a JSON object with an 'error' key containing a short error message (under 100 characters).\n\n"
-            f"User Command: \"{command_text}\"\n"
-            f"Screenshot (base64, first 500 characters): \"{img_str[:500]}...\""
+        # Build a string summary of UI elements (limit to first 20 to avoid token bloat)
+        ui_elements_str = "\n".join(
+            [f"{el['text']} at ({el['left']}, {el['top']}, {el['width']}x{el['height']})" for el in ui_elements[:20]]
         )
-
+        
+        # Build the prompt for GPT-4
+        prompt = (
+            "You are a browser automation assistant. Based on the following list of UI elements extracted from a browser screenshot "
+            "and the user's command, determine the necessary action to perform. Return a JSON object with the following keys:\n"
+            "  - 'action': one of 'click', 'open', 'type', 'scroll', etc.\n"
+            "  - 'target': the target element description or URL.\n"
+            "  - 'value': any additional text required (if applicable).\n"
+            "  - 'position': an object with 'x' and 'y' coordinates (ideally the center of the UI element's bounding box) where the action should occur.\n\n"
+            "If the command cannot be executed, return a JSON object with an 'error' key containing a short error message (under 100 characters).\n\n"
+            f"User Command: \"{command_text}\"\n\n"
+            "UI Elements:\n"
+            f"{ui_elements_str}"
+        )
+        
         # Call the OpenAI ChatCompletion API
         response = openai.ChatCompletion.create(
             model="gpt-4",
@@ -60,8 +98,7 @@ def analyze_command(command_text, screenshot):
             temperature=0.2,
             max_tokens=150,
         )
-
-        # Extract and parse the API response
+        
         message = response["choices"][0]["message"]["content"].strip()
         try:
             result = json.loads(message)
