@@ -7,7 +7,7 @@ def notify_user(message, title="Browser Automation"): # Sends a notif to the use
             title=title,
             message=message,
             app_name="Web Accessibility App",
-            timeout=5  # Notification stays visible for 5 seconds
+            timeout=3  # Notification stays visible for 5 seconds
         )
         logging.info("Notification sent successfully.")
     except Exception as e:
