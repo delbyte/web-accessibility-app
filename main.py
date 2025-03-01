@@ -1,6 +1,6 @@
 import time
 import logging
-from speech_recognition import wait_for_wake_word, record_command
+from voice_recognition import wait_for_wake_word, record_command
 from screenshot_handler import capture_screenshot
 from openai_api import analyze_command
 from action_executor import perform_action
