@@ -10,7 +10,7 @@ def wait_for_wake_word(wake_word): #Listen for the wake word continuously and re
         while True:
             try:
                 # Listen for a short phrase
-                audio = recognizer.listen(source, phrase_time_limit=3)
+                audio = recognizer.listen(source, phrase_time_limit=6)
                 try:
                     transcript = recognizer.recognize_google(audio).lower()
                     logging.debug(f"Transcript received: {transcript}")
