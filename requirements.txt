@@ -1,0 +1,9 @@
+openai
+python-dotenv
+SpeechRecognition
+PyAudio
+pyautogui
+Pillow
+plyer
+pytesseract
+opencv-python
