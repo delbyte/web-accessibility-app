@@ -7,6 +7,9 @@ import cv2
 import numpy as np
 from dotenv import load_dotenv
 
+# Set the tesseract executable path
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+
 # Load environment variables and set API key
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
