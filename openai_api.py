@@ -45,39 +45,19 @@ def extract_ui_elements(screenshot):
             })
     return elements
 
+import os
+import json
+import logging
+from openai import OpenAI
+
 def analyze_command(command_text, screenshot):
-    """
-    Processes the command by extracting UI elements via OCR from the screenshot,
-    then sending this information along with the command to OpenAI for processing.
-    
-    Args:
-        command_text (str): The user's spoken command.
-        screenshot (PIL.Image): A Pillow Image object of the current browser view.
-        
-    Returns:
-        dict: A structured response from the API with keys such as 'action', 'target', 'value', and 'position'.
-              Example success:
-              {
-                  "action": "click",
-                  "target": "login button",
-                  "value": "",
-                  "position": {"x": 500, "y": 400}
-              }
-              Example error:
-              {
-                  "error": "No matching UI element found."
-              }
-    """
     try:
-        # Extract UI elements from the screenshot
+        # (Assume extract_ui_elements and prompt construction code is here)
         ui_elements = extract_ui_elements(screenshot)
-        
-        # Build a string summary of UI elements (limit to first 20 to avoid token bloat)
+        from config import MAX_UI_ELEMENTS
         ui_elements_str = "\n".join(
-            [f"{el['text']} at ({el['left']}, {el['top']}, {el['width']}x{el['height']})" for el in ui_elements[:20]]
+            [f"{el['text']} at ({el['left']}, {el['top']}, {el['width']}x{el['height']})" for el in ui_elements[:MAX_UI_ELEMENTS]]
         )
-        
-        # Build the prompt for GPT-4
         prompt = (
             "You are a browser automation assistant. Based on the following list of UI elements extracted from a browser screenshot "
             "and the user's command, determine the necessary action to perform. Return a JSON object with the following keys:\n"
@@ -91,20 +71,34 @@ def analyze_command(command_text, screenshot):
             f"{ui_elements_str}"
         )
         
-        # Call the OpenAI ChatCompletion API
-        response = client.chat.completions.create(
-        model="gpt-4",
-        messages=[{"role": "user", "content": "Hello"}],
-        max_tokens=150
+        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        streaming_response = client.chat.completions.create(
+            model="gpt-4",
+            messages=[{"role": "user", "content": prompt}],
+            stream=True,
+            max_tokens=150,
+            temperature=0.2
         )
         
-        message = response["choices"][0]["message"]["content"].strip()
+        # Process tokens in realtime
+        full_message = ""
+        print("Streaming response:")
+        for chunk in streaming_response:
+            token = chunk.choices[0].delta.content  # direct attribute access
+            if token is None:
+                token = ""
+            print(token, end="", flush=True)  # Print token immediately
+            full_message += token
+        print()  # Newline after streaming
+        
+        # Parse the full message as JSON
         try:
-            result = json.loads(message)
+            result = json.loads(full_message)
         except json.JSONDecodeError:
-            logging.error("Failed to parse JSON response from OpenAI API.")
+            logging.error("Failed to parse JSON response from OpenAI API. Full message: " + full_message)
             return {"error": "Failed to parse API response."}
         
+        # Return the parsed result (which should be a dictionary)
         return result
 
     except Exception as e:
