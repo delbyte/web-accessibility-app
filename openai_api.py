@@ -1,4 +1,4 @@
-import openai
+from openai import OpenAI
 import os
 import json
 import logging
@@ -13,7 +13,7 @@ pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tessera
 # Load environment variables and set API key
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-openai.api_key = OPENAI_API_KEY
+client = OpenAI(api_key="your_api_key_here")
 
 def extract_ui_elements(screenshot):
     """
@@ -92,14 +92,10 @@ def analyze_command(command_text, screenshot):
         )
         
         # Call the OpenAI ChatCompletion API
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant for browser automation."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.2,
-            max_tokens=150,
+        response = client.chat.completions.create(
+        model="gpt-4",
+        messages=[{"role": "user", "content": "Hello"}],
+        max_tokens=150
         )
         
         message = response["choices"][0]["message"]["content"].strip()
