@@ -61,18 +61,20 @@ def perform_action(action_details):
                 return False
 
         elif action == "scroll":
-            # For scrolling, assume target provides the direction (if no direction is provided, scroll down by default)
-            if target == "down":
-                pyautogui.scroll(-300)  # Negative scroll for down.
+            # Use the 'direction' key from the API response
+            direction = action_details.get("direction", "").lower()
+            if "down" in direction:
+                pyautogui.scroll(-300)  # Negative value scrolls down.
                 logging.info("Scrolled down.")
                 return True
-            elif target == "up":
-                pyautogui.scroll(300)   # Positive scroll for up.
+            elif "up" in direction:
+                pyautogui.scroll(300)   # Positive value scrolls up.
                 logging.info("Scrolled up.")
                 return True
             else:
-                pyautogui.scroll(-300)  # Negative scroll for down.
-                logging.info("Scrolled down.")
+                logging.error(f"Scroll direction '{direction}' not recognized.")
+                return False
+
             
 
         else:
