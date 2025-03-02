@@ -36,15 +36,21 @@ def main():
                 # Process the command with the OpenAI API
                 action_details = analyze_command(command_text, screenshot)
                 logging.info(f"Action details: {action_details}")
-
-                # Execute the action based on the API response
-                if perform_action(action_details):
-                    logging.info(f"Action details from API: {action_details}")
-                    notify_user("Task completed successfully.")
-                    logging.info("Action executed successfully.")
+                
+                # Check if the API validation returned an error message
+                if "error" in action_details:
+                    error_message = action_details["error"]  # Should be less than 100 characters.
+                    notify_user(error_message)
+                    logging.error(f"Validation error: {error_message}")
                 else:
-                    notify_user("Error: Unable to complete the task.")
-                    logging.error("Action execution failed.")
+                    # Execute the action based on the API response
+                    if perform_action(action_details):
+                        logging.info(f"Action details from API: {action_details}")
+                        notify_user("Task completed successfully.")
+                        logging.info("Action executed successfully.")
+                    else:
+                        notify_user("Error: Unable to complete the task.")
+                        logging.error("Action execution failed.")
 
             # Short sleep to avoid high CPU usage in the loop
             time.sleep(LOOP_SLEEP_DURATION)
