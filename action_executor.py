@@ -51,7 +51,7 @@ def perform_action(action_details):
                 return False
 
         elif action == "type":
-            # Use typewrite for typing actions.
+            # Use typewrite for typing actions.     
             if value:
                 pyautogui.typewrite(value, interval=0.05)
                 logging.info(f"Typed '{value}'.")
