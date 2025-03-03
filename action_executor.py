@@ -2,6 +2,7 @@ import pyautogui
 import webbrowser
 import logging
 import os
+import time
 
 def perform_action(action_details):
     """

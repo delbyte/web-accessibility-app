@@ -1,7 +1,7 @@
 # config.py
 
 # Wake word that triggers the app
-WAKE_WORD = "browser"
+WAKE_WORD = "hello"
 
 # Threshold (in seconds) to determine when the user stops speaking
 SILENCE_THRESHOLD = 2.0
