@@ -1,6 +1,7 @@
 import pyautogui
 import webbrowser
 import logging
+import os
 
 def perform_action(action_details):
     """
@@ -43,7 +44,13 @@ def perform_action(action_details):
         elif action == "open":
             # Use webbrowser to open a URL if provided.
             if target:
-                webbrowser.open(target)
+                # Register Brave browser
+                brave_path = r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"
+                if os.path.exists(brave_path):
+                    webbrowser.register('brave', None, webbrowser.BackgroundBrowser(brave_path))
+                    webbrowser.get('brave').open(target)
+                else:
+                    webbrowser.open(target)  # Fallback to default browser if Brave is not found
                 logging.info(f"Opened {target} in the browser.")
                 return True
             else:
@@ -90,7 +97,7 @@ def perform_action(action_details):
                     logging.error(f"Tab change value '{value}' not recognized.")
                     return False
         else:
-            logging.error(f"Action '{action}' is not suppsorted.")
+            logging.error(f"Action '{action}' is not supported.")
             return False
 
     except Exception as e:
