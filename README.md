@@ -21,7 +21,7 @@ browsingforall is designed to enhance web accessibility through voice commands. 
 ## How to Use
 
 1. **Start the Application**: Run the main script to start the application.
-2. **Wait for Wake Word**: The application listens for a wake word ("browser", for now).
+2. **Wait for Wake Word**: The application listens for a wake word ("hello", for now).
 3. **Give Voice Commands**: After the wake word is detected, give voice commands such as "scroll down", "type hello", or "click search", or "click brave" or "open youtube.com", or "change next"(to go to the next tab and "change previous" to go to the previous tab).
 4. **Receive Feedback**: The application will notify you about the actions it performs, and if your system introduces any errors, it will inform you about that as well!
 
