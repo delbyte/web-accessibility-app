@@ -61,6 +61,7 @@ def perform_action(action_details):
             # Use typewrite for typing actions.     
             if value:
                 pyautogui.typewrite(value, interval=0.05)
+                pyautogui.press('enter')
                 logging.info(f"Typed '{value}'.")
                 return True
             else:
