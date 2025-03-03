@@ -50,6 +50,26 @@ def extract_ui_elements(screenshot):
 
 def analyze_command(command_text, screenshot):
     try:
+        # Check for specific commands that don't require API call
+        if "scroll" in command_text.lower():
+            if "up" in command_text.lower():
+                return {"action": "scroll", "value": "up", "direction": "up"}
+            elif "down" in command_text.lower():
+                return {"action": "scroll", "value": "down", "direction": "down"}
+            else:
+                return {"action": "scroll", "value": "down", "direction": "down"}
+
+        elif "change" in command_text.lower():
+            if "next" in command_text.lower():
+                return {"action": "change", "value": "next"}
+            elif "previous" in command_text.lower():
+                return {"action": "change", "value": "previous"}
+
+        elif "type" in command_text.lower():
+            # Extract the text after "type" command
+            value = command_text.split("type", 1)[1].strip()
+            return {"action": "type", "value": value}
+
         # Extract UI elements from the screenshot
         ui_elements = extract_ui_elements(screenshot)
         
@@ -104,10 +124,21 @@ def analyze_command(command_text, screenshot):
         # Log the full message received before parsing
         logging.info("Full streaming response:\n" + full_message)
         
+        import re
+
+        # Remove the starting ```json and trailing ```
+        clean_message = full_message.strip()
+        if clean_message.startswith("```json"):
+            clean_message = clean_message[len("```json"):].strip()
+        if clean_message.endswith("```"):
+            clean_message = clean_message[:-3].strip()
+
+
+        # Parse the full message as JSON    
         try:
-            result = json.loads(full_message)
+            result = json.loads(clean_message)
         except json.JSONDecodeError:
-            logging.error("Failed to parse JSON response from OpenAI API. Full message: " + full_message)
+            logging.error("Failed to parse JSON response from OpenAI API. Full message: " + clean_message)
             return {"error": "Failed to parse API response."}
         
         return result
