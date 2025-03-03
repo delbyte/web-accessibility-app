@@ -1,4 +1,4 @@
-from openai import OpenAI
+import openai
 import os
 import json
 import logging
@@ -13,7 +13,10 @@ pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tessera
 # Load environment variables and set API key
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-client = OpenAI(api_key="your_api_key_here")
+if not OPENAI_API_KEY:
+    logging.error("OpenAI API key is not set.")
+    raise RuntimeError("API key not set.")
+client = OpenAI(api_key="OPENAI_API_KEY")
 
 def extract_ui_elements(screenshot):
     """
