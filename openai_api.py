@@ -45,19 +45,26 @@ def extract_ui_elements(screenshot):
             })
     return elements
 
-import os
-import json
-import logging
-from openai import OpenAI
-
 def analyze_command(command_text, screenshot):
     try:
-        # (Assume extract_ui_elements and prompt construction code is here)
+        # Extract UI elements from the screenshot
         ui_elements = extract_ui_elements(screenshot)
+        
+        # Log each extracted element
+        logging.info("OCR Extracted UI Elements:")
+        for el in ui_elements:
+            logging.info(f"Text: '{el['text']}' at ({el['left']}, {el['top']}), size: {el['width']}x{el['height']}")
+        
+        # Build a string summary (limit to first MAX_UI_ELEMENTS to avoid token bloat)
         from config import MAX_UI_ELEMENTS
         ui_elements_str = "\n".join(
             [f"{el['text']} at ({el['left']}, {el['top']}, {el['width']}x{el['height']})" for el in ui_elements[:MAX_UI_ELEMENTS]]
         )
+        
+        # Log the UI elements summary that will be sent in the prompt
+        logging.info("UI Elements Summary:\n" + ui_elements_str)
+        
+        # Build the prompt
         prompt = (
             "You are a browser automation assistant. Based on the following list of UI elements extracted from a browser screenshot "
             "and the user's command, determine the necessary action to perform. Return a JSON object with the following keys:\n"
@@ -71,6 +78,7 @@ def analyze_command(command_text, screenshot):
             f"{ui_elements_str}"
         )
         
+        # (Streaming response code continues as before)
         client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         streaming_response = client.chat.completions.create(
             model="gpt-4",
@@ -80,27 +88,28 @@ def analyze_command(command_text, screenshot):
             temperature=0.2
         )
         
-        # Process tokens in realtime
         full_message = ""
         print("Streaming response:")
         for chunk in streaming_response:
-            token = chunk.choices[0].delta.content  # direct attribute access
+            token = chunk.choices[0].delta.content
             if token is None:
                 token = ""
-            print(token, end="", flush=True)  # Print token immediately
+            print(token, end="", flush=True)
             full_message += token
         print()  # Newline after streaming
         
-        # Parse the full message as JSON
+        # Log the full message received before parsing
+        logging.info("Full streaming response:\n" + full_message)
+        
         try:
             result = json.loads(full_message)
         except json.JSONDecodeError:
             logging.error("Failed to parse JSON response from OpenAI API. Full message: " + full_message)
             return {"error": "Failed to parse API response."}
         
-        # Return the parsed result (which should be a dictionary)
         return result
 
     except Exception as e:
         logging.error(f"Error in analyze_command: {e}")
         return {"error": "API error occurred."}
+
