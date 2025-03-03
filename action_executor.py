@@ -74,6 +74,21 @@ def perform_action(action_details):
             else:
                 logging.error(f"Scroll direction '{direction}' not recognized.")
                 return False
+            
+        elif action == "change":
+            #Change tabs with pyautogui
+            if value:
+                if "next" in value:
+                    pyautogui.hotkey('ctrl', 'tab')
+                    logging.info("Changed to next tab.")
+                    return True
+                elif "previous" in value:
+                    pyautogui.hotkey('ctrl', 'shift', 'tab')
+                    logging.info("Changed to previous tab.")
+                    return True
+                else:
+                    logging.error(f"Tab change value '{value}' not recognized.")
+                    return False
 
             
 
