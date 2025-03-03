@@ -71,11 +71,11 @@ def perform_action(action_details):
             # Use the 'direction' key from the API response
             direction = action_details.get("direction", "").lower()
             if "down" in direction:
-                pyautogui.scroll(-300)  # Negative value scrolls down.
+                pyautogui.scroll(-600)  # Negative value scrolls down.
                 logging.info("Scrolled down.")
                 return True
             elif "up" in direction:
-                pyautogui.scroll(300)   # Positive value scrolls up.
+                pyautogui.scroll(600)   # Positive value scrolls up.
                 logging.info("Scrolled up.")
                 return True
             else:
