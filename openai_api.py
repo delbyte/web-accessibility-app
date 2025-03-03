@@ -69,6 +69,11 @@ def analyze_command(command_text, screenshot):
             # Extract the text after "type" command
             value = command_text.split("type", 1)[1].strip()
             return {"action": "type", "value": value}
+        
+        elif "open" in command_text.lower():
+            # Extract the URL after "open" command
+            url = command_text.split("open", 1)[1].strip()
+            return {"action": "open", "target": url}
 
         # Extract UI elements from the screenshot
         ui_elements = extract_ui_elements(screenshot)
