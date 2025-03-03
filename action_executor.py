@@ -89,9 +89,6 @@ def perform_action(action_details):
                 else:
                     logging.error(f"Tab change value '{value}' not recognized.")
                     return False
-
-            
-
         else:
             logging.error(f"Action '{action}' is not suppsorted.")
             return False

@@ -84,7 +84,7 @@ def analyze_command(command_text, screenshot):
         # (Streaming response code continues as before)
         client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         streaming_response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4o-mini",
             messages=[{"role": "user", "content": prompt}],
             stream=True,
             max_tokens=150,
